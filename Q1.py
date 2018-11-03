@@ -135,6 +135,7 @@ allData = get_samples_parallel(data,n_s)
 # O gráfco mostra como estão dispersos os dados de entrada entre a única característica. Os dados que estamos visualizando são referente a lucro de um rede de food truck em diversas cidades separadas por população. A característica do problea é a população da cidade em base de $10^4$ habitantes, no eixo das abscissa e os dados de saída no eixo das ordenadas que representa o lucro com base de $\$ 10^4 $.
 # 
 
+#plotando cada novo conjunto de dados (é dificil de ver por contas de sobreposição)
 colormap = plt.cm.gist_ncar #nipy_spectral, Set1,Paired  
 colorst = [colormap(i) for i in np.linspace(0, 0.9,n_s)]  
 print(colorst)
@@ -148,7 +149,7 @@ plt.show()
 
 
 
-#Tendo feito 
+#Tendo os novos conjuntos de dados, é calculado o gradiente sequencial para cada um
 gd = pymp.shared.dict() # será um dicinário de dicinário
 with pymp.Parallel() as p:
     for i in p.range(n_s):
@@ -159,13 +160,11 @@ with pymp.Parallel() as p:
         d['id'] = i
         gd[i] = copy.deepcopy(d)
     
+#feito a ponderação de cada theta para o resultado final
 theta = np.zeros((2,1))
 for i in range(n_s):
     theta = theta + gd[i]['theta']
 theta = theta/n_s
-# Foi fornecido o valor do custo para $\theta_0 = [0,0]^T$ é de 32.07, constatamos isso no código abaixo.
-
-# In[7]:
 
 
 #print("Custo = {:.02f}, para theta = [0,0]'".format(custo_reglin_uni(X,y,np.array([[0],[0]]))))
