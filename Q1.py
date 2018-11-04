@@ -39,7 +39,7 @@ def get_samples_parallel(data,n):
             d = {}
 
             data_p = data.sample(frac=1, replace=True,random_state=p.thread_num)
-            p.print('profit {}\n'.format(data_p['Population']))
+            #p.print('profit {}\n'.format(data_p['Population']))
 
             # separa os conjuntos de dados x (caracteristicas) e y (alvo)
             cols = data_p.shape[1]  
@@ -86,8 +86,41 @@ def gd_reglin_uni(X, y, alpha, epochs, theta = np.array([0,0], ndmin = 2).T):
 
     return cost[-1], theta
 
+
+def gd_reglin_uni_parallel(dataFrame, alpha, epochs, proc =4, numberSamples = 4):
+    """GD com várias amostras do mesmo data set, o GD evolui junto a cada epoca . \n
+    dataSet = data frame original com X e y \n
+    theta = sempre começa com zero
+    """
+
+    theta_size = 2
+    allData = pymp.shared.dict()
+    allData = get_samples_parallel(dataFrame,numberSamples)
+    #theta = pymp.shared.array((theta_size,1))
+    theta = np.zeros((theta_size,1))
+    epochs_debug = pymp.shared.array((epochs,numberSamples,theta_size,1))
+    
+            
+    m = len(allData[0]['y'])
+    for i in range(epochs):
+        with pymp.Parallel() as p:
+            for j in p.range(numberSamples):
+                p.print('proccessor:{}|proccess{}'.format(p.thread_num,j))
+                #p.print('allData[{}][X].dot({}):{}'.format(j,theta.T,np.average(allData[j]['X'].dot(theta)) ) )
+                loss = allData[j]['X'].dot(theta) - allData[j]['y']
+                #p.print('thread:{}|j:{}|i:{}|loss:{}'.format(p.thread_num,j,i, (allData[j]['X'].T.dot(loss)/m).T))
+                #p.print('allData[{}][X].T.dot(loss)/m:{}'.format(j,np.average(allData[j]['X'].T.dot(loss)/m)))
+                p.print('epoch:',i)
+                epochs_debug[i][j] = allData[j]['X'].T.dot(loss)/m #gradiente
+        ind = np.argmax(np.linalg.norm(epochs_debug[i,:],axis=1))
+        theta = theta - (alpha * epochs_debug[i][ind])
+        print(f'best from epoch {i} is sample {ind} and new theta is {theta.T}')
+    return epochs_debug
+
+
+print('#'*40)
 #não mais usado
-def gd_reglin_uni_parallel(X, y, alpha, epochs, theta = np.array([0,0], ndmin = 2).T, proc = 4):
+def gd_reglin_uni_parallel_deprecated(X, y, alpha, epochs, theta = np.array([0,0], ndmin = 2).T, proc = 4):
     n_times = proc
     costP = pymp.shared.array([n_times,1])
     thetaP = pymp.shared.array([n_times,2])
@@ -126,8 +159,10 @@ filepath = "/ex1data1.txt"
 data = importarDados(filepath,["Population","Profit"])
 
 #bagging
-n_s=8
-allData = get_samples_parallel(data,n_s)
+n_s=4
+#allData = get_samples_parallel(data,n_s)
+di = gd_reglin_uni_parallel(dataFrame=data,alpha=0.01,epochs=5000,numberSamples=n_s)
+
 
 
 #############################################
