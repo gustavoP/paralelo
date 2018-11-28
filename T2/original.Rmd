@@ -8,55 +8,121 @@ library(tictoc)
 Sys.setenv(SPARK_HOME = "/home/gustavo/spark/spark-2.3.2-bin-hadoop2.7")
 Sys.setenv(SPARK_HOME_VERSION='2.3.2')
 #sc = spark_connect(master = "local")
-```
 
-```{r}
 sparkR.session()
 #sparkR.session(master = "local[*]", sparkConfig = list(spark.driver.memory = "4g"))
+
 ```
 
+
 ```{r}
-tic("load")
+tic("load data")
 vra_wu <- read.df("/home/gustavo/Desktop/vra_wu.csv", "csv", header = "true")
 aerodromos = read.df("/home/gustavo/Desktop/Glossario_de_Aerodromo.csv","csv", header = "true")
 toc()
 ```
 
-```{r}
-tic("query1")
-createOrReplaceTempView(vra_wu, "vra_wu")
-createOrReplaceTempView(aerodromos, "aerodromos")
 
-q1 = sql("SELECT * 
-    FROM vra_wu
-    INNER JOIN aerodromos a1 ON vra_wu.origin = a1.Sigla_OACI
-    INNER JOIN aerodromos a2 ON vra_wu.destiny = a2.Sigla_OACI
+Cenário 1:
+Fazer um Pré processamento(pp) e depois aplicar 2 filtros
+query 1 = pp %>% filtro1(tempo e status)
+query 2 = pp %>% filtro2(group by)
+```{r}
+tic("Cenario1 PP")
+
+createOrReplaceTempView(aerodromos, "aerodromos")
+vwq1 = vra_wu %>% na.omit(how="any",cols=c("origin"))
+createOrReplaceTempView(vwq1, "vwq1")
+
+pp = sql("SELECT * 
+    FROM vwq1
+    INNER JOIN aerodromos a1 ON vwq1.origin = a1.Sigla_OACI
+    INNER JOIN aerodromos a2 ON vwq1.destiny = a2.Sigla_OACI
+WHERE (year(depart_expect) == 2017 OR year(arrival_expect) ==2017)
+AND a1.Pais == 'BRASIL' 
+AND a2.Pais =='BRASIL'")
+
+#prepro = collect(pp)
+toc()
+```
+
+```{r}
+tic("Cenario1 PP + filtro 1")
+
+createOrReplaceTempView(pp, "pp")
+
+c1q1 = sql("SELECT * 
+    FROM pp
+WHERE (departure_delay >15 AND departure_delay <240)
+AND status == 'REALIZADO' ")
+
+q1 = collect(c1q1)
+toc()
+#rm(query1)
+```
+
+
+```{r}
+tic("Cenario1 PP + filtro 2")
+createOrReplaceTempView(pp, "pp")
+c1q2 = sql("SELECT 
+    origin, 
+    COUNT(origin) as CountOrigem 
+    FROM pp
+WHERE (departure_delay >15 AND departure_delay <240)
+AND status == 'REALIZADO'
+GROUP BY pp.origin")
+q2 = collect(c1q2)
+toc()
+#rm(query2)
+```
+
+
+
+Cenário 2:
+fazer 2 query independentes a partir do data set original(ds)
+query 1 = dso %>% pré processamento + filtro1
+query 2 = dso %>% pré processamento + filtro2
+
+```{r}
+tic("Cenario1 PP + filtro 1")
+createOrReplaceTempView(aerodromos, "aerodromos")
+vwna = vra_wu %>% na.omit(how="any",cols=c("origin"))
+createOrReplaceTempView(vwna, "vwna")
+
+c2q2 = sql("SELECT *
+    FROM vwna
+    INNER JOIN aerodromos a1 ON vwna.origin = a1.Sigla_OACI
+    INNER JOIN aerodromos a2 ON vwna.destiny = a2.Sigla_OACI
 WHERE (year(depart_expect) == 2017 OR year(arrival_expect) ==2017)
 AND (departure_delay >15 AND departure_delay <240)
 AND status == 'REALIZADO'
 AND a1.Pais == 'BRASIL' 
-AND a2.Pais =='BRASIL' ")
-query1 = collect(q1)
+AND a2.Pais =='BRASIL'")
+q2 = collect(c2q2)
 toc()
-rm(query1)
+#rm(query2)
 ```
 
 ```{r}
-tic("query2")
-createOrReplaceTempView(vra_wu, "vra_wu")
+tic("Cenario1 PP + filtro 2")
 createOrReplaceTempView(aerodromos, "aerodromos")
-q2 = sql("SELECT 
+vwna = vra_wu %>% na.omit(how="any",cols=c("origin"))
+createOrReplaceTempView(vwna, "vwna")
+
+c2q2 = sql("SELECT 
     origin, 
     COUNT(origin) as CountOrigem 
-    FROM vra_wu
-    INNER JOIN aerodromos a1 ON vra_wu.origin = a1.Sigla_OACI
-    INNER JOIN aerodromos a2 ON vra_wu.destiny = a2.Sigla_OACI
+    FROM vwna
+    INNER JOIN aerodromos a1 ON vwna.origin = a1.Sigla_OACI
+    INNER JOIN aerodromos a2 ON vwna.destiny = a2.Sigla_OACI
 WHERE (year(depart_expect) == 2017 OR year(arrival_expect) ==2017)
 AND (departure_delay >15 AND departure_delay <240)
 AND status == 'REALIZADO'
 AND a1.Pais == 'BRASIL' 
 AND a2.Pais =='BRASIL'
-GROUP BY vra_wu.origin")
-query2 = collect(q2)
+GROUP BY vwna.origin")
+q2 = collect(c2q2)
 toc()
+#rm(query2)
 ```
