@@ -1,0 +1,76 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+#library
+options(warn=-1)
+library(dplyr)
+library(lubridate)
+library(readxl)
+library(repr)
+library(tictoc)
+library(sqldf)
+```
+
+```{r}
+tic("load")
+vra_wu = read.csv(file="/home/gustavo/Desktop/vra_wu.csv", header=TRUE)
+aerodromos = read.csv(file="/home/gustavo/Desktop/Glossario_de_Aerodromo.csv", header = TRUE)
+toc()
+```
+
+```{r}
+tic("query1")
+vra_wu = vra_wu %>%
+  mutate(depart_expect = as.POSIXct(depart_expect),
+         depart = as.POSIXct(depart),
+        arrival_expect = as.POSIXct(arrival_expect),
+        arrival = as.POSIXct(arrival))
+toc()
+```
+
+```{r}
+tic("query1")
+vra_wu_17 = vra_wu %>% filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+q1 = sql("SELECT * 
+    FROM vra_wu
+    INNER JOIN aerodromos a1 ON vra_wu.origin = a1.Sigla_OACI
+    INNER JOIN aerodromos a2 ON vra_wu.destiny = a2.Sigla_OACI
+WHERE (departure_delay >15 AND departure_delay <240)
+AND status == 'REALIZADO'
+AND a1.Pais == 'BRASIL' 
+AND a2.Pais =='BRASIL' ")
+query1 = sqldf(q1)
+toc()
+rm(query1)
+rm(vra_wu_17)
+#object.size(vra_wu) 1667213200 bytes
+```
+
+```{r}
+tic("query2")
+vra_wu_17 = vra_wu %>% filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+q2 = "SELECT 
+    origin, 
+    COUNT(origin) as CountOrigem 
+    FROM vra_wu_17
+    INNER JOIN aerodromos a1 ON vra_wu_17.origin = a1.Sigla_OACI
+    INNER JOIN aerodromos a2 ON vra_wu_17.destiny = a2.Sigla_OACI
+WHERE (departure_delay >15 AND departure_delay <240)
+AND status == 'REALIZADO'
+AND a1.Pais == 'BRASIL' 
+AND a2.Pais =='BRASIL'
+GROUP BY vra_wu_17.origin"
+query2 = sqldf(q2)
+toc()
+rm(vra_wu_17)
+rm(query2)
+#(year(depart_expect) == 2017 OR year(arrival_expect) ==2017)) 
+```
+
+
+
+
