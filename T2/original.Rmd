@@ -85,7 +85,7 @@ query 1 = dso %>% pré processamento + filtro1
 query 2 = dso %>% pré processamento + filtro2
 
 ```{r}
-tic("Cenario1 PP + filtro 1")
+tic("Cenario2 PP + filtro 1")
 createOrReplaceTempView(aerodromos, "aerodromos")
 vwna = vra_wu %>% na.omit(how="any",cols=c("origin"))
 createOrReplaceTempView(vwna, "vwna")

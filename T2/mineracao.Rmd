@@ -22,38 +22,98 @@ aerodromos = read.csv(file="/home/gustavo/Desktop/Glossario_de_Aerodromo.csv", h
 toc()
 ```
 
+
+
+Cenário 1:
+Fazer um Pré processamento(pp) e depois aplicar 2 filtros
+query 1 = pp %>% filtro1(tempo e status)
+query 2 = pp %>% filtro2(group by)
 ```{r}
-tic("query1")
-vra_wu = vra_wu %>%
+tic("Cenario1 PP")
+
+pp = vra_wu %>%
   mutate(depart_expect = as.POSIXct(depart_expect),
-         depart = as.POSIXct(depart),
-        arrival_expect = as.POSIXct(arrival_expect),
-        arrival = as.POSIXct(arrival))
+        arrival_expect = as.POSIXct(arrival_expect)) %>% 
+  na.omit(how="any",cols=c("origin")) %>% 
+  filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+
+q = sql("SELECT * 
+    FROM pp
+    INNER JOIN aerodromos a1 ON pp.origin = a1.Sigla_OACI
+    INNER JOIN aerodromos a2 ON pp.destiny = a2.Sigla_OACI
+WHERE a1.Pais == 'BRASIL' AND a2.Pais =='BRASIL'")
+pp = sqldf(q)
 toc()
 ```
 
 ```{r}
-tic("query1")
-vra_wu_17 = vra_wu %>% filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+tic("Cenario1 PP + filtro 1")
+
 q1 = sql("SELECT * 
-    FROM vra_wu
-    INNER JOIN aerodromos a1 ON vra_wu.origin = a1.Sigla_OACI
-    INNER JOIN aerodromos a2 ON vra_wu.destiny = a2.Sigla_OACI
+    FROM pp
+WHERE (departure_delay >15 AND departure_delay <240)
+AND status == 'REALIZADO' ")
+
+c1q1 = sqldf(q1)
+toc()
+rm(c1q1)
+```
+
+
+```{r}
+tic("Cenario1 PP + filtro 2")
+
+q = sql("SELECT 
+    origin, 
+    COUNT(origin) as CountOrigem 
+    FROM pp
+WHERE (departure_delay >15 AND departure_delay <240)
+AND status == 'REALIZADO'
+GROUP BY pp.origin")
+c1q2 = sqldf(q)
+toc()
+rm(c1q2)
+rm(pp)
+```
+
+Cenário 2:
+fazer 2 query independentes a partir do data set original(ds)
+query 1 = ds %>% pré processamento + filtro1
+query 2 = ds %>% pré processamento + filtro2
+
+
+```{r}
+tic("Cenario2 PP + filtro 1") #precisa fazer essa mudança de formato por causa do filtro do ano, isso consome muito tempo
+vra_wu_17 = vra_wu %>%
+  mutate(depart_expect = as.POSIXct(depart_expect), 
+        arrival_expect = as.POSIXct(arrival_expect)) %>% 
+  na.omit(how="any",cols=c("origin")) %>% 
+  filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+
+q = sql("SELECT * 
+    FROM vra_wu_17
+    INNER JOIN aerodromos a1 ON vra_wu_17.origin = a1.Sigla_OACI
+    INNER JOIN aerodromos a2 ON vra_wu_17.destiny = a2.Sigla_OACI
 WHERE (departure_delay >15 AND departure_delay <240)
 AND status == 'REALIZADO'
 AND a1.Pais == 'BRASIL' 
 AND a2.Pais =='BRASIL' ")
-query1 = sqldf(q1)
+c2q1 = sqldf(q)
 toc()
-rm(query1)
+rm(c2q1)
 rm(vra_wu_17)
 #object.size(vra_wu) 1667213200 bytes
 ```
 
 ```{r}
-tic("query2")
-vra_wu_17 = vra_wu %>% filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
-q2 = "SELECT 
+tic("Cenario1 PP + filtro 2") #precisa fazer essa mudança de formato por causa do filtro do ano, isso consome muito tempo
+vra_wu_17 = vra_wu %>%
+  mutate(depart_expect = as.POSIXct(depart_expect),
+        arrival_expect = as.POSIXct(arrival_expect)) %>% 
+  na.omit(how="any",cols=c("origin")) %>% 
+  filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+
+q = "SELECT 
     origin, 
     COUNT(origin) as CountOrigem 
     FROM vra_wu_17
@@ -64,10 +124,11 @@ AND status == 'REALIZADO'
 AND a1.Pais == 'BRASIL' 
 AND a2.Pais =='BRASIL'
 GROUP BY vra_wu_17.origin"
-query2 = sqldf(q2)
+c2q2 = sqldf(q)
 toc()
+rm(c2q2)
 rm(vra_wu_17)
-rm(query2)
+
 #(year(depart_expect) == 2017 OR year(arrival_expect) ==2017)) 
 ```
 

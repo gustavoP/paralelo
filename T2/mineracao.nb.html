@@ -227,59 +227,115 @@ vra_wu = read.csv(file=&quot;/home/gustavo/Desktop/vra_wu.csv&quot;, header=TRUE
 aerodromos = read.csv(file=&quot;/home/gustavo/Desktop/Glossario_de_Aerodromo.csv&quot;, header = TRUE)
 toc()</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoibG9hZDogMjk5LjE0MyBzZWMgZWxhcHNlZFxuIn0= -->
-<pre><code>load: 299.143 sec elapsed</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoibG9hZDogMzAxLjk4NyBzZWMgZWxhcHNlZFxuIn0= -->
+<pre><code>load: 301.987 sec elapsed</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>Cenário 1: Fazer um Pré processamento(pp) e depois aplicar 2 filtros query 1 = pp %&gt;% filtro1(tempo e status) query 2 = pp %&gt;% filtro2(group by)</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGljKFwicXVlcnkxXCIpXG52cmFfd3UgPSB2cmFfd3UgJT4lXG4gIG11dGF0ZShkZXBhcnRfZXhwZWN0ID0gYXMuUE9TSVhjdChkZXBhcnRfZXhwZWN0KSxcbiAgICAgICAgIGRlcGFydCA9IGFzLlBPU0lYY3QoZGVwYXJ0KSxcbiAgICAgICAgYXJyaXZhbF9leHBlY3QgPSBhcy5QT1NJWGN0KGFycml2YWxfZXhwZWN0KSxcbiAgICAgICAgYXJyaXZhbCA9IGFzLlBPU0lYY3QoYXJyaXZhbCkpXG50b2MoKVxuYGBgIn0= -->
-<pre class="r"><code>tic(&quot;query1&quot;)
-vra_wu = vra_wu %&gt;%
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGljKFwiQ2VuYXJpbzEgUFBcIilcbnBwID0gdnJhX3d1ICU+JVxuICBtdXRhdGUoZGVwYXJ0X2V4cGVjdCA9IGFzLlBPU0lYY3QoZGVwYXJ0X2V4cGVjdCksXG4gICAgICAgIGFycml2YWxfZXhwZWN0ID0gYXMuUE9TSVhjdChhcnJpdmFsX2V4cGVjdCkpICU+JSBcbiAgbmEub21pdChob3c9XCJhbnlcIixjb2xzPWMoXCJvcmlnaW5cIikpICU+JSBcbiAgZmlsdGVyKHllYXIoZGVwYXJ0X2V4cGVjdCkgPT0gMjAxNyB8IHllYXIoYXJyaXZhbF9leHBlY3QpPT0yMDE3KVxucSA9IHNxbChcIlNFTEVDVCAqIFxuICAgIEZST00gcHBcbiAgICBJTk5FUiBKT0lOIGFlcm9kcm9tb3MgYTEgT04gcHAub3JpZ2luID0gYTEuU2lnbGFfT0FDSVxuICAgIElOTkVSIEpPSU4gYWVyb2Ryb21vcyBhMiBPTiBwcC5kZXN0aW55ID0gYTIuU2lnbGFfT0FDSVxuV0hFUkUgYTEuUGFpcyA9PSAnQlJBU0lMJyBBTkQgYTIuUGFpcyA9PSdCUkFTSUwnXCIpXG5wcCA9IHNxbGRmKHEpXG50b2MoKVxuYGBgIn0= -->
+<pre class="r"><code>tic(&quot;Cenario1 PP&quot;)
+pp = vra_wu %&gt;%
   mutate(depart_expect = as.POSIXct(depart_expect),
-         depart = as.POSIXct(depart),
-        arrival_expect = as.POSIXct(arrival_expect),
-        arrival = as.POSIXct(arrival))
+        arrival_expect = as.POSIXct(arrival_expect)) %&gt;% 
+  na.omit(how=&quot;any&quot;,cols=c(&quot;origin&quot;)) %&gt;% 
+  filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+q = sql(&quot;SELECT * 
+    FROM pp
+    INNER JOIN aerodromos a1 ON pp.origin = a1.Sigla_OACI
+    INNER JOIN aerodromos a2 ON pp.destiny = a2.Sigla_OACI
+WHERE a1.Pais == 'BRASIL' AND a2.Pais =='BRASIL'&quot;)
+pp = sqldf(q)
 toc()</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoicXVlcnkxOiAxNzkuMjU3IHNlYyBlbGFwc2VkXG4ifQ== -->
-<pre><code>query1: 179.257 sec elapsed</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiQ2VuYXJpbzEgUFA6IDExMi4wNDYgc2VjIGVsYXBzZWRcbiJ9 -->
+<pre><code>Cenario1 PP: 112.046 sec elapsed</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGljKFwicXVlcnkxXCIpXG52cmFfd3VfMTcgPSB2cmFfd3UgJT4lIGZpbHRlcih5ZWFyKGRlcGFydF9leHBlY3QpID09IDIwMTcgfCB5ZWFyKGFycml2YWxfZXhwZWN0KT09MjAxNylcbnExID0gc3FsKFwiU0VMRUNUICogXG4gICAgRlJPTSB2cmFfd3VcbiAgICBJTk5FUiBKT0lOIGFlcm9kcm9tb3MgYTEgT04gdnJhX3d1Lm9yaWdpbiA9IGExLlNpZ2xhX09BQ0lcbiAgICBJTk5FUiBKT0lOIGFlcm9kcm9tb3MgYTIgT04gdnJhX3d1LmRlc3RpbnkgPSBhMi5TaWdsYV9PQUNJXG5XSEVSRSAoZGVwYXJ0dXJlX2RlbGF5ID4xNSBBTkQgZGVwYXJ0dXJlX2RlbGF5IDwyNDApXG5BTkQgc3RhdHVzID09ICdSRUFMSVpBRE8nXG5BTkQgYTEuUGFpcyA9PSAnQlJBU0lMJyBcbkFORCBhMi5QYWlzID09J0JSQVNJTCcgXCIpXG5xdWVyeTEgPSBzcWxkZihxMSlcbnRvYygpXG5gYGAifQ== -->
-<pre class="r"><code>tic(&quot;query1&quot;)
-vra_wu_17 = vra_wu %&gt;% filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGljKFwiQ2VuYXJpbzEgUFAgKyBmaWx0cm8gMVwiKVxucTEgPSBzcWwoXCJTRUxFQ1QgKiBcbiAgICBGUk9NIHBwXG5XSEVSRSAoZGVwYXJ0dXJlX2RlbGF5ID4xNSBBTkQgZGVwYXJ0dXJlX2RlbGF5IDwyNDApXG5BTkQgc3RhdHVzID09ICdSRUFMSVpBRE8nIFwiKVxuYzFxMSA9IHNxbGRmKHExKVxudG9jKClcbmBgYCJ9 -->
+<pre class="r"><code>tic(&quot;Cenario1 PP + filtro 1&quot;)
 q1 = sql(&quot;SELECT * 
-    FROM vra_wu
-    INNER JOIN aerodromos a1 ON vra_wu.origin = a1.Sigla_OACI
-    INNER JOIN aerodromos a2 ON vra_wu.destiny = a2.Sigla_OACI
+    FROM pp
+WHERE (departure_delay &gt;15 AND departure_delay &lt;240)
+AND status == 'REALIZADO' &quot;)
+c1q1 = sqldf(q1)
+toc()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiQ2VuYXJpbzEgUFAgKyBmaWx0cm8gMTogNy40ODQgc2VjIGVsYXBzZWRcbiJ9 -->
+<pre><code>Cenario1 PP + filtro 1: 7.484 sec elapsed</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3JtKHF1ZXJ5MSlcbmBgYCJ9 -->
+<pre class="r"><code>#rm(query1)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGljKFwiQ2VuYXJpbzEgUFAgKyBmaWx0cm8gMlwiKVxucSA9IHNxbChcIlNFTEVDVCBcbiAgICBvcmlnaW4sIFxuICAgIENPVU5UKG9yaWdpbikgYXMgQ291bnRPcmlnZW0gXG4gICAgRlJPTSBwcFxuV0hFUkUgKGRlcGFydHVyZV9kZWxheSA+MTUgQU5EIGRlcGFydHVyZV9kZWxheSA8MjQwKVxuQU5EIHN0YXR1cyA9PSAnUkVBTElaQURPJ1xuR1JPVVAgQlkgcHAub3JpZ2luXCIpXG5jMXEyID0gc3FsZGYocSlcbnRvYygpXG5gYGAifQ== -->
+<pre class="r"><code>tic(&quot;Cenario1 PP + filtro 2&quot;)
+q = sql(&quot;SELECT 
+    origin, 
+    COUNT(origin) as CountOrigem 
+    FROM pp
+WHERE (departure_delay &gt;15 AND departure_delay &lt;240)
+AND status == 'REALIZADO'
+GROUP BY pp.origin&quot;)
+c1q2 = sqldf(q)
+toc()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiQ2VuYXJpbzEgUFAgKyBmaWx0cm8gMjogNS4wMTkgc2VjIGVsYXBzZWRcbiJ9 -->
+<pre><code>Cenario1 PP + filtro 2: 5.019 sec elapsed</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucm0oYzFxMilcbmBgYCJ9 -->
+<pre class="r"><code>rm(c1q2)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Cenário 2: fazer 2 query independentes a partir do data set original(ds) query 1 = ds %&gt;% pré processamento + filtro1 query 2 = ds %&gt;% pré processamento + filtro2</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGljKFwiQ2VuYXJpbzIgUFAgKyBmaWx0cm8gMVwiKSAjcHJlY2lzYSBmYXplciBlc3NhIG11ZGFuw6dhIGRlIGZvcm1hdG8gcG9yIGNhdXNhIGRvIGZpbHRybyBkbyBhbm8sIGlzc28gY29uc29tZSBtdWl0byB0ZW1wb1xudnJhX3d1XzE3ID0gdnJhX3d1ICU+JVxuICBtdXRhdGUoZGVwYXJ0X2V4cGVjdCA9IGFzLlBPU0lYY3QoZGVwYXJ0X2V4cGVjdCksIFxuICAgICAgICBhcnJpdmFsX2V4cGVjdCA9IGFzLlBPU0lYY3QoYXJyaXZhbF9leHBlY3QpKSAlPiUgXG4gIG5hLm9taXQoaG93PVwiYW55XCIsY29scz1jKFwib3JpZ2luXCIpKSAlPiUgXG4gIGZpbHRlcih5ZWFyKGRlcGFydF9leHBlY3QpID09IDIwMTcgfCB5ZWFyKGFycml2YWxfZXhwZWN0KT09MjAxNylcbnEgPSBzcWwoXCJTRUxFQ1QgKiBcbiAgICBGUk9NIHZyYV93dV8xN1xuICAgIElOTkVSIEpPSU4gYWVyb2Ryb21vcyBhMSBPTiB2cmFfd3VfMTcub3JpZ2luID0gYTEuU2lnbGFfT0FDSVxuICAgIElOTkVSIEpPSU4gYWVyb2Ryb21vcyBhMiBPTiB2cmFfd3VfMTcuZGVzdGlueSA9IGEyLlNpZ2xhX09BQ0lcbldIRVJFIChkZXBhcnR1cmVfZGVsYXkgPjE1IEFORCBkZXBhcnR1cmVfZGVsYXkgPDI0MClcbkFORCBzdGF0dXMgPT0gJ1JFQUxJWkFETydcbkFORCBhMS5QYWlzID09ICdCUkFTSUwnIFxuQU5EIGEyLlBhaXMgPT0nQlJBU0lMJyBcIilcbmMycTEgPSBzcWxkZihxKVxudG9jKClcbmBgYCJ9 -->
+<pre class="r"><code>tic(&quot;Cenario2 PP + filtro 1&quot;) #precisa fazer essa mudança de formato por causa do filtro do ano, isso consome muito tempo
+vra_wu_17 = vra_wu %&gt;%
+  mutate(depart_expect = as.POSIXct(depart_expect), 
+        arrival_expect = as.POSIXct(arrival_expect)) %&gt;% 
+  na.omit(how=&quot;any&quot;,cols=c(&quot;origin&quot;)) %&gt;% 
+  filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+q = sql(&quot;SELECT * 
+    FROM vra_wu_17
+    INNER JOIN aerodromos a1 ON vra_wu_17.origin = a1.Sigla_OACI
+    INNER JOIN aerodromos a2 ON vra_wu_17.destiny = a2.Sigla_OACI
 WHERE (departure_delay &gt;15 AND departure_delay &lt;240)
 AND status == 'REALIZADO'
 AND a1.Pais == 'BRASIL' 
 AND a2.Pais =='BRASIL' &quot;)
-query1 = sqldf(q1)
+c2q1 = sqldf(q)
 toc()</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoicXVlcnkxOiAzMy44Njggc2VjIGVsYXBzZWRcbiJ9 -->
-<pre><code>query1: 33.868 sec elapsed</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiQ2VuYXJpbzIgUFAgKyBmaWx0cm8gMTogMTA4LjYwOCBzZWMgZWxhcHNlZFxuIn0= -->
+<pre><code>Cenario2 PP + filtro 1: 108.608 sec elapsed</code></pre>
 <!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucm0ocXVlcnkxKVxucm0odnJhX3d1XzE3KVxuI29iamVjdC5zaXplKHZyYV93dSkgMTY2NzIxMzIwMCBieXRlc1xuYGBgIn0= -->
-<pre class="r"><code>rm(query1)
-rm(vra_wu_17)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucm0oYzJxMSlcbiNvYmplY3Quc2l6ZSh2cmFfd3UpIDE2NjcyMTMyMDAgYnl0ZXNcbmBgYCJ9 -->
+<pre class="r"><code>rm(c2q1)
 #object.size(vra_wu) 1667213200 bytes</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGljKFwicXVlcnkyXCIpXG52cmFfd3VfMTcgPSB2cmFfd3UgJT4lIGZpbHRlcih5ZWFyKGRlcGFydF9leHBlY3QpID09IDIwMTcgfCB5ZWFyKGFycml2YWxfZXhwZWN0KT09MjAxNylcbnEyID0gXCJTRUxFQ1QgXG4gICAgb3JpZ2luLCBcbiAgICBDT1VOVChvcmlnaW4pIGFzIENvdW50T3JpZ2VtIFxuICAgIEZST00gdnJhX3d1XzE3XG4gICAgSU5ORVIgSk9JTiBhZXJvZHJvbW9zIGExIE9OIHZyYV93dV8xNy5vcmlnaW4gPSBhMS5TaWdsYV9PQUNJXG4gICAgSU5ORVIgSk9JTiBhZXJvZHJvbW9zIGEyIE9OIHZyYV93dV8xNy5kZXN0aW55ID0gYTIuU2lnbGFfT0FDSVxuV0hFUkUgKGRlcGFydHVyZV9kZWxheSA+MTUgQU5EIGRlcGFydHVyZV9kZWxheSA8MjQwKVxuQU5EIHN0YXR1cyA9PSAnUkVBTElaQURPJ1xuQU5EIGExLlBhaXMgPT0gJ0JSQVNJTCcgXG5BTkQgYTIuUGFpcyA9PSdCUkFTSUwnXG5HUk9VUCBCWSB2cmFfd3VfMTcub3JpZ2luXCJcbnF1ZXJ5MiA9IHNxbGRmKHEyKVxudG9jKClcbmBgYCJ9 -->
-<pre class="r"><code>tic(&quot;query2&quot;)
-vra_wu_17 = vra_wu %&gt;% filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
-q2 = &quot;SELECT 
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGljKFwiQ2VuYXJpbzEgUFAgKyBmaWx0cm8gMlwiKSAjcHJlY2lzYSBmYXplciBlc3NhIG11ZGFuw6dhIGRlIGZvcm1hdG8gcG9yIGNhdXNhIGRvIGZpbHRybyBkbyBhbm8sIGlzc28gY29uc29tZSBtdWl0byB0ZW1wb1xudnJhX3d1XzE3ID0gdnJhX3d1ICU+JVxuICBtdXRhdGUoZGVwYXJ0X2V4cGVjdCA9IGFzLlBPU0lYY3QoZGVwYXJ0X2V4cGVjdCksXG4gICAgICAgIGFycml2YWxfZXhwZWN0ID0gYXMuUE9TSVhjdChhcnJpdmFsX2V4cGVjdCkpICU+JSBcbiAgbmEub21pdChob3c9XCJhbnlcIixjb2xzPWMoXCJvcmlnaW5cIikpICU+JSBcbiAgZmlsdGVyKHllYXIoZGVwYXJ0X2V4cGVjdCkgPT0gMjAxNyB8IHllYXIoYXJyaXZhbF9leHBlY3QpPT0yMDE3KVxucSA9IFwiU0VMRUNUIFxuICAgIG9yaWdpbiwgXG4gICAgQ09VTlQob3JpZ2luKSBhcyBDb3VudE9yaWdlbSBcbiAgICBGUk9NIHZyYV93dV8xN1xuICAgIElOTkVSIEpPSU4gYWVyb2Ryb21vcyBhMSBPTiB2cmFfd3VfMTcub3JpZ2luID0gYTEuU2lnbGFfT0FDSVxuICAgIElOTkVSIEpPSU4gYWVyb2Ryb21vcyBhMiBPTiB2cmFfd3VfMTcuZGVzdGlueSA9IGEyLlNpZ2xhX09BQ0lcbldIRVJFIChkZXBhcnR1cmVfZGVsYXkgPjE1IEFORCBkZXBhcnR1cmVfZGVsYXkgPDI0MClcbkFORCBzdGF0dXMgPT0gJ1JFQUxJWkFETydcbkFORCBhMS5QYWlzID09ICdCUkFTSUwnIFxuQU5EIGEyLlBhaXMgPT0nQlJBU0lMJ1xuR1JPVVAgQlkgdnJhX3d1XzE3Lm9yaWdpblwiXG5jMnEyID0gc3FsZGYocSlcbnRvYygpXG5gYGAifQ== -->
+<pre class="r"><code>tic(&quot;Cenario1 PP + filtro 2&quot;) #precisa fazer essa mudança de formato por causa do filtro do ano, isso consome muito tempo
+vra_wu_17 = vra_wu %&gt;%
+  mutate(depart_expect = as.POSIXct(depart_expect),
+        arrival_expect = as.POSIXct(arrival_expect)) %&gt;% 
+  na.omit(how=&quot;any&quot;,cols=c(&quot;origin&quot;)) %&gt;% 
+  filter(year(depart_expect) == 2017 | year(arrival_expect)==2017)
+q = &quot;SELECT 
     origin, 
     COUNT(origin) as CountOrigem 
     FROM vra_wu_17
@@ -290,22 +346,22 @@ AND status == 'REALIZADO'
 AND a1.Pais == 'BRASIL' 
 AND a2.Pais =='BRASIL'
 GROUP BY vra_wu_17.origin&quot;
-query2 = sqldf(q2)
+c2q2 = sqldf(q)
 toc()</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoicXVlcnkyOiA1LjM4NyBzZWMgZWxhcHNlZFxuIn0= -->
-<pre><code>query2: 5.387 sec elapsed</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiQ2VuYXJpbzEgUFAgKyBmaWx0cm8gMjogMTA0Ljg2NiBzZWMgZWxhcHNlZFxuIn0= -->
+<pre><code>Cenario1 PP + filtro 2: 104.866 sec elapsed</code></pre>
 <!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucm0odnJhX3d1XzE3KVxucm0ocXVlcnkyKVxuIyh5ZWFyKGRlcGFydF9leHBlY3QpID09IDIwMTcgT1IgeWVhcihhcnJpdmFsX2V4cGVjdCkgPT0yMDE3KSkgXG5gYGAifQ== -->
-<pre class="r"><code>rm(vra_wu_17)
-rm(query2)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucm0oYzJxMilcbnJtKHZyYV93dV8xNylcbiMoeWVhcihkZXBhcnRfZXhwZWN0KSA9PSAyMDE3IE9SIHllYXIoYXJyaXZhbF9leHBlY3QpID09MjAxNykpIFxuYGBgIn0= -->
+<pre class="r"><code>rm(c2q2)
+rm(vra_wu_17)
 #(year(depart_expect) == 2017 OR year(arrival_expect) ==2017)) </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiUiBOb3RlYm9vayIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKCmBgYHtyfQojbGlicmFyeQpvcHRpb25zKHdhcm49LTEpCmxpYnJhcnkoZHBseXIpCmxpYnJhcnkobHVicmlkYXRlKQpsaWJyYXJ5KHJlYWR4bCkKbGlicmFyeShyZXByKQpsaWJyYXJ5KHRpY3RvYykKbGlicmFyeShzcWxkZikKYGBgCgpgYGB7cn0KdGljKCJsb2FkIikKdnJhX3d1ID0gcmVhZC5jc3YoZmlsZT0iL2hvbWUvZ3VzdGF2by9EZXNrdG9wL3ZyYV93dS5jc3YiLCBoZWFkZXI9VFJVRSkKYWVyb2Ryb21vcyA9IHJlYWQuY3N2KGZpbGU9Ii9ob21lL2d1c3Rhdm8vRGVza3RvcC9HbG9zc2FyaW9fZGVfQWVyb2Ryb21vLmNzdiIsIGhlYWRlciA9IFRSVUUpCnRvYygpCmBgYAoKYGBge3J9CnRpYygicXVlcnkxIikKdnJhX3d1ID0gdnJhX3d1ICU+JQogIG11dGF0ZShkZXBhcnRfZXhwZWN0ID0gYXMuUE9TSVhjdChkZXBhcnRfZXhwZWN0KSwKICAgICAgICAgZGVwYXJ0ID0gYXMuUE9TSVhjdChkZXBhcnQpLAogICAgICAgIGFycml2YWxfZXhwZWN0ID0gYXMuUE9TSVhjdChhcnJpdmFsX2V4cGVjdCksCiAgICAgICAgYXJyaXZhbCA9IGFzLlBPU0lYY3QoYXJyaXZhbCkpCnRvYygpCmBgYAoKYGBge3J9CnRpYygicXVlcnkxIikKdnJhX3d1XzE3ID0gdnJhX3d1ICU+JSBmaWx0ZXIoeWVhcihkZXBhcnRfZXhwZWN0KSA9PSAyMDE3IHwgeWVhcihhcnJpdmFsX2V4cGVjdCk9PTIwMTcpCnExID0gc3FsKCJTRUxFQ1QgKiAKICAgIEZST00gdnJhX3d1CiAgICBJTk5FUiBKT0lOIGFlcm9kcm9tb3MgYTEgT04gdnJhX3d1Lm9yaWdpbiA9IGExLlNpZ2xhX09BQ0kKICAgIElOTkVSIEpPSU4gYWVyb2Ryb21vcyBhMiBPTiB2cmFfd3UuZGVzdGlueSA9IGEyLlNpZ2xhX09BQ0kKV0hFUkUgKGRlcGFydHVyZV9kZWxheSA+MTUgQU5EIGRlcGFydHVyZV9kZWxheSA8MjQwKQpBTkQgc3RhdHVzID09ICdSRUFMSVpBRE8nCkFORCBhMS5QYWlzID09ICdCUkFTSUwnIApBTkQgYTIuUGFpcyA9PSdCUkFTSUwnICIpCnF1ZXJ5MSA9IHNxbGRmKHExKQp0b2MoKQpybShxdWVyeTEpCnJtKHZyYV93dV8xNykKI29iamVjdC5zaXplKHZyYV93dSkgMTY2NzIxMzIwMCBieXRlcwpgYGAKCmBgYHtyfQp0aWMoInF1ZXJ5MiIpCnZyYV93dV8xNyA9IHZyYV93dSAlPiUgZmlsdGVyKHllYXIoZGVwYXJ0X2V4cGVjdCkgPT0gMjAxNyB8IHllYXIoYXJyaXZhbF9leHBlY3QpPT0yMDE3KQpxMiA9ICJTRUxFQ1QgCiAgICBvcmlnaW4sIAogICAgQ09VTlQob3JpZ2luKSBhcyBDb3VudE9yaWdlbSAKICAgIEZST00gdnJhX3d1XzE3CiAgICBJTk5FUiBKT0lOIGFlcm9kcm9tb3MgYTEgT04gdnJhX3d1XzE3Lm9yaWdpbiA9IGExLlNpZ2xhX09BQ0kKICAgIElOTkVSIEpPSU4gYWVyb2Ryb21vcyBhMiBPTiB2cmFfd3VfMTcuZGVzdGlueSA9IGEyLlNpZ2xhX09BQ0kKV0hFUkUgKGRlcGFydHVyZV9kZWxheSA+MTUgQU5EIGRlcGFydHVyZV9kZWxheSA8MjQwKQpBTkQgc3RhdHVzID09ICdSRUFMSVpBRE8nCkFORCBhMS5QYWlzID09ICdCUkFTSUwnIApBTkQgYTIuUGFpcyA9PSdCUkFTSUwnCkdST1VQIEJZIHZyYV93dV8xNy5vcmlnaW4iCnF1ZXJ5MiA9IHNxbGRmKHEyKQp0b2MoKQpybSh2cmFfd3VfMTcpCnJtKHF1ZXJ5MikKIyh5ZWFyKGRlcGFydF9leHBlY3QpID09IDIwMTcgT1IgeWVhcihhcnJpdmFsX2V4cGVjdCkgPT0yMDE3KSkgCmBgYAoKCgoK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUiBOb3RlYm9vayIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKCmBgYHtyfQojbGlicmFyeQpvcHRpb25zKHdhcm49LTEpCmxpYnJhcnkoZHBseXIpCmxpYnJhcnkobHVicmlkYXRlKQpsaWJyYXJ5KHJlYWR4bCkKbGlicmFyeShyZXByKQpsaWJyYXJ5KHRpY3RvYykKbGlicmFyeShzcWxkZikKYGBgCgpgYGB7cn0KdGljKCJsb2FkIikKdnJhX3d1ID0gcmVhZC5jc3YoZmlsZT0iL2hvbWUvZ3VzdGF2by9EZXNrdG9wL3ZyYV93dS5jc3YiLCBoZWFkZXI9VFJVRSkKYWVyb2Ryb21vcyA9IHJlYWQuY3N2KGZpbGU9Ii9ob21lL2d1c3Rhdm8vRGVza3RvcC9HbG9zc2FyaW9fZGVfQWVyb2Ryb21vLmNzdiIsIGhlYWRlciA9IFRSVUUpCnRvYygpCmBgYAoKCgpDZW7DoXJpbyAxOgpGYXplciB1bSBQcsOpIHByb2Nlc3NhbWVudG8ocHApIGUgZGVwb2lzIGFwbGljYXIgMiBmaWx0cm9zCnF1ZXJ5IDEgPSBwcCAlPiUgZmlsdHJvMSh0ZW1wbyBlIHN0YXR1cykKcXVlcnkgMiA9IHBwICU+JSBmaWx0cm8yKGdyb3VwIGJ5KQpgYGB7cn0KdGljKCJDZW5hcmlvMSBQUCIpCgpwcCA9IHZyYV93dSAlPiUKICBtdXRhdGUoZGVwYXJ0X2V4cGVjdCA9IGFzLlBPU0lYY3QoZGVwYXJ0X2V4cGVjdCksCiAgICAgICAgYXJyaXZhbF9leHBlY3QgPSBhcy5QT1NJWGN0KGFycml2YWxfZXhwZWN0KSkgJT4lIAogIG5hLm9taXQoaG93PSJhbnkiLGNvbHM9Yygib3JpZ2luIikpICU+JSAKICBmaWx0ZXIoeWVhcihkZXBhcnRfZXhwZWN0KSA9PSAyMDE3IHwgeWVhcihhcnJpdmFsX2V4cGVjdCk9PTIwMTcpCgpxID0gc3FsKCJTRUxFQ1QgKiAKICAgIEZST00gcHAKICAgIElOTkVSIEpPSU4gYWVyb2Ryb21vcyBhMSBPTiBwcC5vcmlnaW4gPSBhMS5TaWdsYV9PQUNJCiAgICBJTk5FUiBKT0lOIGFlcm9kcm9tb3MgYTIgT04gcHAuZGVzdGlueSA9IGEyLlNpZ2xhX09BQ0kKV0hFUkUgYTEuUGFpcyA9PSAnQlJBU0lMJyBBTkQgYTIuUGFpcyA9PSdCUkFTSUwnIikKcHAgPSBzcWxkZihxKQp0b2MoKQpgYGAKCmBgYHtyfQp0aWMoIkNlbmFyaW8xIFBQICsgZmlsdHJvIDEiKQoKcTEgPSBzcWwoIlNFTEVDVCAqIAogICAgRlJPTSBwcApXSEVSRSAoZGVwYXJ0dXJlX2RlbGF5ID4xNSBBTkQgZGVwYXJ0dXJlX2RlbGF5IDwyNDApCkFORCBzdGF0dXMgPT0gJ1JFQUxJWkFETycgIikKCmMxcTEgPSBzcWxkZihxMSkKdG9jKCkKcm0oYzFxMSkKYGBgCgoKYGBge3J9CnRpYygiQ2VuYXJpbzEgUFAgKyBmaWx0cm8gMiIpCgpxID0gc3FsKCJTRUxFQ1QgCiAgICBvcmlnaW4sIAogICAgQ09VTlQob3JpZ2luKSBhcyBDb3VudE9yaWdlbSAKICAgIEZST00gcHAKV0hFUkUgKGRlcGFydHVyZV9kZWxheSA+MTUgQU5EIGRlcGFydHVyZV9kZWxheSA8MjQwKQpBTkQgc3RhdHVzID09ICdSRUFMSVpBRE8nCkdST1VQIEJZIHBwLm9yaWdpbiIpCmMxcTIgPSBzcWxkZihxKQp0b2MoKQpybShjMXEyKQpybShwcCkKYGBgCgpDZW7DoXJpbyAyOgpmYXplciAyIHF1ZXJ5IGluZGVwZW5kZW50ZXMgYSBwYXJ0aXIgZG8gZGF0YSBzZXQgb3JpZ2luYWwoZHMpCnF1ZXJ5IDEgPSBkcyAlPiUgcHLDqSBwcm9jZXNzYW1lbnRvICsgZmlsdHJvMQpxdWVyeSAyID0gZHMgJT4lIHByw6kgcHJvY2Vzc2FtZW50byArIGZpbHRybzIKCgpgYGB7cn0KdGljKCJDZW5hcmlvMiBQUCArIGZpbHRybyAxIikgI3ByZWNpc2EgZmF6ZXIgZXNzYSBtdWRhbsOnYSBkZSBmb3JtYXRvIHBvciBjYXVzYSBkbyBmaWx0cm8gZG8gYW5vLCBpc3NvIGNvbnNvbWUgbXVpdG8gdGVtcG8KdnJhX3d1XzE3ID0gdnJhX3d1ICU+JQogIG11dGF0ZShkZXBhcnRfZXhwZWN0ID0gYXMuUE9TSVhjdChkZXBhcnRfZXhwZWN0KSwgCiAgICAgICAgYXJyaXZhbF9leHBlY3QgPSBhcy5QT1NJWGN0KGFycml2YWxfZXhwZWN0KSkgJT4lIAogIG5hLm9taXQoaG93PSJhbnkiLGNvbHM9Yygib3JpZ2luIikpICU+JSAKICBmaWx0ZXIoeWVhcihkZXBhcnRfZXhwZWN0KSA9PSAyMDE3IHwgeWVhcihhcnJpdmFsX2V4cGVjdCk9PTIwMTcpCgpxID0gc3FsKCJTRUxFQ1QgKiAKICAgIEZST00gdnJhX3d1XzE3CiAgICBJTk5FUiBKT0lOIGFlcm9kcm9tb3MgYTEgT04gdnJhX3d1XzE3Lm9yaWdpbiA9IGExLlNpZ2xhX09BQ0kKICAgIElOTkVSIEpPSU4gYWVyb2Ryb21vcyBhMiBPTiB2cmFfd3VfMTcuZGVzdGlueSA9IGEyLlNpZ2xhX09BQ0kKV0hFUkUgKGRlcGFydHVyZV9kZWxheSA+MTUgQU5EIGRlcGFydHVyZV9kZWxheSA8MjQwKQpBTkQgc3RhdHVzID09ICdSRUFMSVpBRE8nCkFORCBhMS5QYWlzID09ICdCUkFTSUwnIApBTkQgYTIuUGFpcyA9PSdCUkFTSUwnICIpCmMycTEgPSBzcWxkZihxKQp0b2MoKQpybShjMnExKQpybSh2cmFfd3VfMTcpCiNvYmplY3Quc2l6ZSh2cmFfd3UpIDE2NjcyMTMyMDAgYnl0ZXMKYGBgCgpgYGB7cn0KdGljKCJDZW5hcmlvMSBQUCArIGZpbHRybyAyIikgI3ByZWNpc2EgZmF6ZXIgZXNzYSBtdWRhbsOnYSBkZSBmb3JtYXRvIHBvciBjYXVzYSBkbyBmaWx0cm8gZG8gYW5vLCBpc3NvIGNvbnNvbWUgbXVpdG8gdGVtcG8KdnJhX3d1XzE3ID0gdnJhX3d1ICU+JQogIG11dGF0ZShkZXBhcnRfZXhwZWN0ID0gYXMuUE9TSVhjdChkZXBhcnRfZXhwZWN0KSwKICAgICAgICBhcnJpdmFsX2V4cGVjdCA9IGFzLlBPU0lYY3QoYXJyaXZhbF9leHBlY3QpKSAlPiUgCiAgbmEub21pdChob3c9ImFueSIsY29scz1jKCJvcmlnaW4iKSkgJT4lIAogIGZpbHRlcih5ZWFyKGRlcGFydF9leHBlY3QpID09IDIwMTcgfCB5ZWFyKGFycml2YWxfZXhwZWN0KT09MjAxNykKCnEgPSAiU0VMRUNUIAogICAgb3JpZ2luLCAKICAgIENPVU5UKG9yaWdpbikgYXMgQ291bnRPcmlnZW0gCiAgICBGUk9NIHZyYV93dV8xNwogICAgSU5ORVIgSk9JTiBhZXJvZHJvbW9zIGExIE9OIHZyYV93dV8xNy5vcmlnaW4gPSBhMS5TaWdsYV9PQUNJCiAgICBJTk5FUiBKT0lOIGFlcm9kcm9tb3MgYTIgT04gdnJhX3d1XzE3LmRlc3RpbnkgPSBhMi5TaWdsYV9PQUNJCldIRVJFIChkZXBhcnR1cmVfZGVsYXkgPjE1IEFORCBkZXBhcnR1cmVfZGVsYXkgPDI0MCkKQU5EIHN0YXR1cyA9PSAnUkVBTElaQURPJwpBTkQgYTEuUGFpcyA9PSAnQlJBU0lMJyAKQU5EIGEyLlBhaXMgPT0nQlJBU0lMJwpHUk9VUCBCWSB2cmFfd3VfMTcub3JpZ2luIgpjMnEyID0gc3FsZGYocSkKdG9jKCkKcm0oYzJxMikKcm0odnJhX3d1XzE3KQoKIyh5ZWFyKGRlcGFydF9leHBlY3QpID09IDIwMTcgT1IgeWVhcihhcnJpdmFsX2V4cGVjdCkgPT0yMDE3KSkgCmBgYAoKCgoK</div>
 
 
 
