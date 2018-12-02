@@ -1,0 +1,44 @@
+SparkR - 2 ex
+===============
+carregar_dados: 9.026 sec elapsed                                               
+selecionar_coluna: 0.023 sec elapsed
+remover_na: 0.028 sec elapsed
+contar: 0.031 sec elapsed
+coletar_resultados: 17.399 sec elapsed  
+
+SparkR - 1 ex
+==============
+carregar_dados: 5.796 sec elapsed
+selecionar_coluna: 0.032 sec elapsed
+remover_na: 0.04 sec elapsed
+contar: 0.039 sec elapsed
+coletar_resultados: 26.636 sec elapsed     
+
+
+Sparklyr - 2 ex
+===============
+carregar_dados: 7.354 sec elapsed                                               
+selecionar_coluna: 0.025 sec elapsed
+remover_na: 0.028 sec elapsed
+contar: 0.03 sec elapsed
+coletar_resultados: 16.57 sec elapsed                                           
+
+
+Sparklyr - 1 ex	
+===============
+carregar_dados: 130.928 sec elapsed
+selecionar_coluna: 0.007 sec elapsed
+remover_na: 2.561 sec elapsed
+contar: 0.008 sec elapsed
+coletar_resultados: 2.156 sec elapsed
+
+
+R Puro
+=======
+carregar_dados: 293.478 sec elapsed
+selecionar_coluna: 0.044 sec elapsed
+remover_na: 0.648 sec elapsed
+contar: 0.325 sec elapsed
+coletar_resultados: 0 sec elapsed
+
+

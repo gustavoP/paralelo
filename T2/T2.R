@@ -2,16 +2,18 @@ library(SparkR)
 library(sparklyr)
 library(tictoc)
 
-Sys.setenv(SPARK_HOME = "/home/gustavo/spark/spark-2.3.2-bin-hadoop2.7")
-Sys.setenv(SPARK_HOME_VERSION='2.3.2')
+#Sys.setenv(SPARK_HOME = "/usr/local/spark")
+#Sys.setenv(SPARK_HOME_VERSION='2.3.2')
 #sc = spark_connect(master = "local")
+
+
 
 sparkR.session()
 #sparkR.session(master = "local[*]", sparkConfig = list(spark.driver.memory = "4g"))
 
 
-vra_wu <- read.df("/home/gustavo/Desktop/vra_wu.csv", "csv", header = "true")#, inferSchema = "true", na.strings = "NA")
-aerodromos = read.df("/home/gustavo/Desktop/Glossario_de_Aerodromo.csv","csv", header = "true")
+vra_wu <- read.df("/home/jeff/datasets/vra_wu/vra_wu.csv", "csv", header = "true")#, inferSchema = "true", na.strings = "NA")
+aerodromos = read.df("/home/jeff/datasets/vra_wu/Glossario_de_Aerodromo.csv","csv", header = "true")
 
 
 createOrReplaceTempView(vra_wu, "vra_wu")

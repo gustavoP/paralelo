@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 
-```{r}
+```{r results='hide', message=FALSE, warning=FALSE}
 #library
 options(warn=-1)
 library(dplyr)
@@ -17,8 +17,10 @@ library(sqldf)
 
 ```{r}
 tic("load")
-vra_wu = read.csv(file="/home/gustavo/Desktop/vra_wu.csv", header=TRUE)
-aerodromos = read.csv(file="/home/gustavo/Desktop/Glossario_de_Aerodromo.csv", header = TRUE)
+#vra_wu = read.csv(file="/home/gustavo/Desktop/vra_wu.csv", header=TRUE)
+#aerodromos = read.csv(file="/home/gustavo/Desktop/Glossario_de_Aerodromo.csv", header = TRUE)
+vra_wu = read.csv(file="/home/jeff/datasets/vra_wu/vra_wu.csv", header=TRUE)
+aerodromos = read.csv(file="/home/jeff/datasets/vra_wu/Glossario_de_Aerodromo.csv", header = TRUE)
 toc()
 ```
 
@@ -28,6 +30,7 @@ Cenário 1:
 Fazer um Pré processamento(pp) e depois aplicar 2 filtros
 query 1 = pp %>% filtro1(tempo e status)
 query 2 = pp %>% filtro2(group by)
+
 ```{r}
 tic("Cenario1 PP")
 
